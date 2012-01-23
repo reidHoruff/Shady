@@ -1,0 +1,164 @@
+<script>
+
+	var tabIds = new Array();
+	var blackListHash = new Array();
+
+	chrome.tabs.onCreated.addListener( function(tab) {
+		visitingUrl( tab );
+	});
+	
+	chrome.tabs.onUpdated.addListener( function( tabId, changeInfo, tab ) {
+		visitingUrl( tab );		
+	});
+	
+	chrome.tabs.onSelectionChanged.addListener(function(tabId, info) { 
+		chrome.tabs.get(tabId, function(tab){
+				checkForBlackList( getSiteRoot(tab.url), tab.url);
+			});		
+	});
+	
+	function visitingUrl( tab )
+	{
+		if(tab.url && (tab.url.indexOf("chrome://") != 0) && (tab.url.indexOf("chrome-extension://") != 0)){
+			console.log( "visiting " + tab.id + " " + tab.url);	
+			
+			if(!tabIds[tab.id]){
+				tabIds[tab.id] = new Array();
+			}
+			
+			tabIds[tab.id].push( tab.url );
+			checkForBlackList( getSiteRoot(tab.url), tab.url);
+		}
+	}
+	
+	function checkForBlackList(root, url)
+	{
+		if( blackListHash[ root ] ){
+			console.log("this site is blacklisted!");
+			chrome.browserAction.setIcon( { 'path':'icons/black_list_icon.png' } );
+			console.log("deleting: " + url);
+			chrome.history.deleteUrl( {'url':url} );
+		}
+		else{
+			chrome.browserAction.setIcon( { 'path':'icons/default_icon.png' } );
+		}
+	}
+	
+	function deleteAll()
+	{
+		console.log("deleting all");
+		chrome.history.deleteAll(function(){
+		});
+	}
+	
+	function deleteTabHistory()
+	{
+		chrome.tabs.getSelected(null, function( tab ){
+			console.log("deleting tab " + tab.id);
+			var hist = tabIds[tab.id];
+			
+			for(x in hist ){
+				console.log( "deleting url " + hist[x] );
+				chrome.history.deleteUrl( {'url': hist[x]} );
+			}				
+		});
+	}
+	
+	function deleteLast(time)
+	{
+		console.log("deleting last " + time);
+		var currTime = new Date().getTime();
+		var hourAgo = currTime - time;
+		chrome.history.deleteRange( { 'startTime':hourAgo, 'endTime':currTime }, function(){} );
+	}
+	
+	function deleteCurrentSiteRoot()
+	{
+		console.log("deleting root");
+		
+		chrome.tabs.getSelected(null, function(tab) {
+			var root = getSiteRoot( tab.url );
+			
+			chrome.history.search( { 'text':'', 'maxResults':9999999 }, function(result) {
+				for(x in result){
+					if( result[x].url.indexOf(root) >= 0){
+						console.log("deleting " + result[x].url);
+						chrome.history.deleteUrl( {"url":result[x].url} );
+					}
+				}
+			});			
+		});	
+	}	
+	
+	function getSiteRoot(url)
+	{
+		var index = url.indexOf("://");
+		
+		if( index >= 0){
+			url = url.substring(index + 3);	
+		}
+		
+		index = url.indexOf("www.");
+		
+		if(index >= 0){
+			url = url.substring(index + 4);
+		}
+		
+		index = url.indexOf('/');
+		
+		if(index >= 0){
+			url = url.substring(0, index);
+		}
+		
+		return url;
+	}
+	
+	function addToBlacklist(root, url)
+	{
+		console.log("adding to blacklist");
+		
+		if(!localStorage['blackList'] || localStorage['blackList']==''){
+			localStorage['blackList'] = root;
+		}
+		else{
+			localStorage['blackList'] += ',' + root;
+		}
+		
+		blackListHash[root] = true;
+		checkForBlackList( root, url );
+	}
+	
+	function removeFromBlackList(root, url)
+	{
+		console.log("remove from blacklist");
+		var blarray = localStorage['blackList'].split(',');
+		var newblarray = new Array();
+		
+		for(x in blarray)
+			if( blarray[x] != root)
+				newblarray.push( blarray[x] );
+				
+		localStorage['blackList'] = newblarray.join(',');
+		updateBlackListHash();
+		checkForBlackList( root, url );
+	}
+	
+	function updateBlackListHash()
+	{
+		blackListHash = new Array();
+		
+		if(!localStorage['blackList'] || localStorage['blackList']==''){
+			return;
+		}
+			
+		var blarray = localStorage['blackList'].split(',');
+		
+		for(x in blarray){
+			blackListHash[blarray[x]] = true;
+			console.log('adding to blhash: ' + blarray[x]);
+		}
+	}
+	
+	document.onload = updateBlackListHash();
+
+</script>

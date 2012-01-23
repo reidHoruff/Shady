@@ -1,0 +1,66 @@
+<head>
+	<link rel="stylesheet" type="text/css" href="popup.css" />
+</head>
+
+<script>
+ 
+	var background = chrome.extension.getBackgroundPage();
+	
+	var hour = 3600000;
+	var tenMin = 600000;
+	
+	function onLoad()
+	{		
+		chrome.tabs.getSelected(null, function(tab) {
+		
+			if(tab.url.indexOf('chrome://') == 0 || tab.url.indexOf('chrome-extension://') == 0){
+				return;
+			}
+			
+			var root = background.getSiteRoot(tab.url);
+			
+			var link = document.createElement("a");
+			link.setAttribute("href","javascript:background.deleteTabHistory()");
+			link.innerHTML = 'All Visited in This Tab';
+			document.getElementById("tasks").appendChild(link);
+			
+			link = document.createElement('br');
+			document.getElementById("tasks").appendChild(link);
+			
+			link = document.createElement("a");
+			link.setAttribute("href","javascript:background.deleteCurrentSiteRoot()");
+			link.innerHTML = root;
+			document.getElementById("tasks").appendChild(link);
+			
+			link = document.createElement('br');
+			document.getElementById("tasks").appendChild(link);
+			
+			var link = document.createElement("a");
+			
+			if( background.blackListHash[ root ] ){
+				link.setAttribute("href","javascript:background.removeFromBlackList('" + root + "','" + tab.url + "')");
+				link.innerHTML = 'Remove Site From Blacklist';
+			}
+			else{
+				link.setAttribute("href","javascript:background.addToBlacklist('" + root + "','" + tab.url + "')");
+				link.innerHTML = 'Add Site to Blacklist';
+			}
+			
+			document.getElementById("tasks").appendChild(link);
+			
+		});
+	}
+
+</script>
+
+<html>
+	<div id='tasks'>
+		<p>Delete:</p>
+		<a href="javascript:background.deleteAll()">Everything</a></br>
+		<a href='javascript:background.deleteLast(hour)'>Last Hour</a></br>
+	</div>
+</html>
+
+<script>
+	document.onload=onLoad();
+</script>

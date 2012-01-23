@@ -1,0 +1,178 @@
+<head>
+
+	<link rel="stylesheet" type="text/css" href="options.css" />
+	
+	<script>
+	
+		var background = chrome.extension.getBackgroundPage();
+		var blackListArray = new Array();
+		
+		function listSitesFromTextarea( tarea )
+		{
+			var sites = new Array();
+			
+			var text = document.getElementById(tarea).value;
+			
+			if( text == '' ){
+				return sites;
+			}
+			
+			var input = text.split(',');
+			
+			for(x in input){
+				var t = trim( input[x] );
+				
+				if(t && t != ''){
+					sites.push( t );
+				}
+			}
+			
+			return sites;
+		}
+
+		function addSitesToBlackList()
+		{
+			var all = listSitesFromTextarea( 'blist' );
+			
+			for(x in all){
+				blackListArray.push( all[x] );
+			}
+			
+			localStorage['blackList'] = blackListArray.join(',');
+			background.updateBlackListHash();
+			document.getElementById( 'blist' ).value = '';
+			
+			for(x in blackListArray){
+				console.log("ls now contains " + blackListArray[x]);
+			}
+		}
+		
+		function removeSitesFromBlackList()
+		{
+			var remove = listSitesFromTextarea( 'wlist' );
+			
+			var newBl = new Array();
+			
+			for(x in blackListArray){
+			
+				var contained = false;
+				for(y in remove){
+					if(blackListArray[x] == remove[y]){
+						contained = true;
+						break;
+					}
+				}
+					
+				if(!contained){
+					newBl.push(blackListArray[x]);
+				}
+				else{
+					console.log("removed: " + blackListArray[x]);
+				}				
+			}
+			
+			blackListArray = newBl;
+			localStorage['blackList'] = blackListArray.join(',');
+			background.updateBlackListHash();
+			document.getElementById( 'wlist' ).value = '';
+		}
+		
+		function removeAllSitesFromBlacklist()
+		{
+			console.log("clearing entire blacklist");
+			blackListArray = new Array();
+			localStorage['blackList'] = '';
+			background.updateBlackListHash();
+			document.getElementById( 'wlist' ).value = '';
+		}
+		
+		function trim(str)
+		{ 
+			var out = '';
+			
+			for(var x=0; x < str.length; x++){
+				switch( str.charAt(x) ){
+					case ' ':
+					case '\n':
+					case '\t':
+					case '\0':
+					case '\r':
+					case '\x0B': break;
+					
+					default: out += str.charAt(x);
+				}
+			}
+					
+			return background.getSiteRoot( out ).toLowerCase();
+		}
+		
+		function readBl()
+		{			
+			if(localStorage['blackList'] && localStorage['blackList'] != '')
+				blackListArray = localStorage['blackList'].split(',');
+			
+			for(x in background.blackListArray ){
+				console.log("localStorage: " + blackListArray[x] );
+			}
+		}
+		
+		function toggleVisibility(id)
+		{
+			var state = document.getElementById(id).style.display;
+			
+			if (state == 'block'){
+				document.getElementById(id).style.display = 'none';
+			} 
+			else{
+				document.getElementById(id).style.display = 'block';
+			}
+		}
+	
+	</script>
+	
+</head>
+
+<html>
+
+	<div id='title'>
+		<p><img id='titleImage' src='options_icon.png'/><span id='titleWords'>Control Panel</span></p>
+	</div>
+	
+	<div id='blackListBox'>
+		
+		<p class='blackListBoxTitle'>Add Sites to Blacklist <span class='comma'>(comma seperated)</span></p>
+		<textarea id='blist'></textarea></br>
+		<input type='button' value='add sites' onClick='addSitesToBlackList()'/>
+		
+		<p class='blackListBoxTitle'>Remove Sites From Blacklist <span class='comma'>(comma seperated)</span></p>
+		<textarea id='wlist'></textarea></br>
+		<input type='button' value='remove sites' onClick='removeSitesFromBlackList()'/>
+		<input type='button' value='remove all sites' onClick='removeAllSitesFromBlacklist()'/>
+		
+	</div>
+	
+	<div id='help'>
+		<a href="javascript:toggleVisibility('whynosee')">Why can't I see the sites in my blacklist?</a> | <a href="javascript:toggleVisibility('whatis')">What is a blacklist?</a>
+	</div>
+	
+	<div id='answers'>
+	
+		<div id='whynosee'>
+			<p>
+				This point of blacklisting a site is so that no history of that site being visited is recorded. This feature is rendered useless if someone can simply see what sites you have blacklisted.  
+			</p>
+		</div>
+		
+		<div id='whatis'>
+			<p>
+				A blacklist is a list of sites that will never be recorded in Chrome's history. You can add as many sites to this list as you please and remove any site at any time. When visiting a blacklisted site, the Shady icon in the top right corner of Chrome will turn red. This is just a way of letting you know that your history is not being recorded for that site.
+			</p>
+		</div>
+		
+	</div>	
+	
+</html>
+
+<script>
+	document.onload = readBl();
+</script>

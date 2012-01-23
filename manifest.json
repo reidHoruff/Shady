@@ -1,0 +1,23 @@
+{
+	"name":"Shady",
+	"version":"0.2",
+	"description":"A better way to cover up your digital footsteps",
+	"background_page":"background.html",
+	"options_page":"options/options.html",
+
+	"browser_action":{
+		"default_icon":"icons/default_icon.png",
+		"popup":"popup/popup.html"
+	},
+
+	"icons":{
+		"16": "icons/icon16.png",
+		"48": "icons/icon48.png",
+		"128": "icons/icon128.png"
+	},
+
+	"permissions":[
+		"history",
+		"tabs"
+	]
+}

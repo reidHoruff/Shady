@@ -1,0 +1,78 @@
+body{
+	font-family:arial;
+}
+
+input{
+	margin-left:0px;
+	margin-top:5px;
+	height:23px;
+}
+
+textarea{
+	width:320px;
+	height:110px;
+	resize:none;
+}
+
+a{
+	text-decoration: none;
+	color:blue;
+}
+
+a:hover{
+	text-decoration:underline;
+}
+
+#title{
+	text-align:center;
+}
+
+#titleWords{
+	font-size:32px;
+	position: relative;
+}
+
+#titleImage{
+	vertical-align:middle;
+}
+
+.blackListBoxTitle{
+	margin-bottom:5px;
+	font-size:15px;
+}
+
+.comma{
+	font-size:9px;
+}
+
+#blackListBox{
+	width: 320px;
+    margin: auto;
+}
+
+#help{
+	text-align:center;
+	margin-top: 50px;
+	font-size: 11px;
+	padding:10px;
+}
+
+#answers{
+	font-size:12px;
+	text-align:justify;
+	text-justify:inter-word;
+	width: 320px;
+	margin:auto;
+}
+
+#whynosee{
+	display:none;
+}
+
+#whatis{
+	display:none;
+}
+	
+	
+	
+	
